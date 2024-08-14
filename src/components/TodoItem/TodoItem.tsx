@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import classNames from 'classnames';
 import { Todo } from '../../types/todo';
 import { TodoDeleteButton } from '../TodoDeleteButton';
@@ -25,7 +25,9 @@ export const TodoItem: React.FC<Props> = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [inputText, setInputText] = useState('');
   const [inputIsEditing, setInputIsEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  // deleting todo
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
@@ -35,6 +37,7 @@ export const TodoItem: React.FC<Props> = ({
     }
   };
 
+  // updating todo
   const handleUpdate = async () => {
     setIsUpdating(true);
     try {
@@ -44,6 +47,7 @@ export const TodoItem: React.FC<Props> = ({
     }
   };
 
+  // handles escape key to cancel editing
   const handleKeyUp = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
       setInputText('');
@@ -51,22 +55,37 @@ export const TodoItem: React.FC<Props> = ({
     }
   };
 
+  // handles form submission for updating or deleting todo
   const handleSubmit = async () => {
+    let success = true;
+
+    //updates todo if title changed
     if (inputText.trim() && inputText.trim() !== todo.title) {
       setIsUpdating(true);
       try {
         await changeTodo({ ...todo, title: inputText.trim() });
+      } catch {
+        success = false;
       } finally {
         setIsUpdating(false);
-        setInputIsEditing(false);
       }
     }
 
+    //deletes todo if title is empty
     if (!inputText.trim()) {
-      handleDelete();
+      try {
+        await handleDelete();
+      } catch {
+        success = false;
+      }
     }
 
-    setInputIsEditing(false);
+    if (success) {
+      setInputIsEditing(false);
+    } else {
+      //focused if request failed
+      inputRef.current?.focus();
+    }
   };
 
   return (
@@ -98,6 +117,7 @@ export const TodoItem: React.FC<Props> = ({
             type="text"
             className="todo__title-field"
             placeholder="Empty todo will be deleted"
+            ref={inputRef}
             value={inputText}
             autoFocus
             onBlur={handleSubmit}

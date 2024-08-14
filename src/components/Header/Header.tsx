@@ -26,12 +26,14 @@ export const Header: React.FC<Props> = ({
 
   const allTodosCompleted = todos.every(todo => todo.completed);
 
+  // focus on the input field when it's not submitting and todos length changes
   useEffect(() => {
     if (!isSubmitting && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isSubmitting, todos.length]);
 
+  // handle form submission to add a new todo
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -68,9 +70,11 @@ export const Header: React.FC<Props> = ({
       });
   };
 
+  // handle toggle of all todos completion status
   const handleToggle = async () => {
     const allNotCompletedTodos = todos.filter(todo => !todo.completed);
 
+    //sets todos ids which being updated (this enables the loader to be turned on in TodoItem.tsx) and changing todo status
     if (allTodosCompleted) {
       setUpdatingTodosIds(new Set(todos.map(todo => todo.id)));
       await Promise.all(

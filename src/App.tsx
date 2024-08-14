@@ -19,6 +19,7 @@ export const App: React.FC = () => {
     new Set(),
   );
 
+  // fetch todos from the server on component mount
   useEffect(() => {
     getTodos()
       .then(setTodos)
@@ -30,6 +31,7 @@ export const App: React.FC = () => {
       });
   }, []);
 
+  // filter todos based on the current status (all, active, completed)
   const filteredTodos = useMemo(() => {
     switch (status) {
       case 'active':
@@ -41,21 +43,27 @@ export const App: React.FC = () => {
     }
   }, [status, todos]);
 
+  // deletes a todo by id and updates the state
   const handleDeleteTodo = async (id: number) => {
     try {
       await deleteTodo(id);
       setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
-    } catch {
+    } catch (error) {
       setErrorMessage('Unable to delete a todo');
       setTimeout(() => {
         setErrorMessage('');
       }, 3000);
+
+      // throws error to be caught in another component (TodoItem.tsx)
+      throw error;
     }
   };
 
+  // deletes all completed todos and updates the state
   const handleDeleteCompleted = async () => {
     const completedTodos = todos.filter(todo => todo.completed);
 
+    //sets todos ids which being deleted (this enables the loader to be turned on in TodoItem.tsx)
     setCompletedDeletingIds(new Set(completedTodos.map(todo => todo.id)));
 
     const deletionPromises = completedTodos.map(todo =>
@@ -71,6 +79,7 @@ export const App: React.FC = () => {
     }, 3000);
   };
 
+  // updates a todo and updates the state with the new todo
   const handleChangeTodo = async (updatedTodo: Todo) => {
     try {
       const changedTodo = await changeTodo(updatedTodo);
@@ -80,11 +89,14 @@ export const App: React.FC = () => {
           todo.id === updatedTodo.id ? changedTodo : todo,
         ),
       );
-    } catch {
+    } catch (error) {
       setErrorMessage('Unable to update a todo');
       setTimeout(() => {
         setErrorMessage('');
       }, 3000);
+
+      // throws error to be caught in another component (TodoItem.tsx)
+      throw error;
     }
   };
 
