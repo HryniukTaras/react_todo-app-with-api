@@ -6,7 +6,7 @@ import classNames from 'classnames';
 type Props = {
   todos: Todo[];
   setTodos: (todos: Todo[]) => void;
-  setUpdatingTodosIds: (value: Set<number>) => void;
+  setLoadingTodoIds: (value: Set<number>) => void;
   setErrorMessage: (message: string) => void;
   setTempTodo: (tempTodo: Todo | null) => void;
   changeTodoStatus: (todo: Todo) => void;
@@ -15,7 +15,7 @@ type Props = {
 export const Header: React.FC<Props> = ({
   todos,
   setTodos,
-  setUpdatingTodosIds,
+  setLoadingTodoIds,
   setErrorMessage,
   setTempTodo,
   changeTodoStatus,
@@ -39,7 +39,7 @@ export const Header: React.FC<Props> = ({
 
     const title = newTitle.trim();
 
-    if (title === '') {
+    if (!title) {
       setErrorMessage('Title should not be empty');
       setTimeout(() => setErrorMessage(''), 3000);
 
@@ -76,12 +76,12 @@ export const Header: React.FC<Props> = ({
 
     //sets todos ids which being updated (this enables the loader to be turned on in TodoItem.tsx) and changing todo status
     if (allTodosCompleted) {
-      setUpdatingTodosIds(new Set(todos.map(todo => todo.id)));
+      setLoadingTodoIds(new Set(todos.map(todo => todo.id)));
       await Promise.all(
         todos.map(todo => changeTodoStatus({ ...todo, completed: false })),
       );
     } else {
-      setUpdatingTodosIds(new Set(allNotCompletedTodos.map(todo => todo.id)));
+      setLoadingTodoIds(new Set(allNotCompletedTodos.map(todo => todo.id)));
       await Promise.all(
         allNotCompletedTodos.map(todo =>
           changeTodoStatus({ ...todo, completed: true }),
@@ -89,7 +89,7 @@ export const Header: React.FC<Props> = ({
       );
     }
 
-    setUpdatingTodosIds(new Set());
+    setLoadingTodoIds(new Set());
   };
 
   return (

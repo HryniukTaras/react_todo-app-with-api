@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { UserWarning } from './UserWarning';
 import { USER_ID, changeTodo, deleteTodo, getTodos } from './api/todos';
-import { Todo } from './types/todo';
+import { Todo, TodoStatus } from './types/todo';
 import classNames from 'classnames';
 import { Header } from './components/Header';
 import { TodoList } from './components/TodoList';
@@ -10,14 +10,11 @@ import { Footer } from './components/Footer';
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
-  const [status, setStatus] = useState<'all' | 'active' | 'completed'>('all');
+  const [status, setStatus] = useState<TodoStatus>('all');
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
-  const [completedDeletingIds, setCompletedDeletingIds] = useState<Set<number>>(
-    new Set(),
-  );
-  const [updatingTodosIds, setUpdatingTodosIds] = useState<Set<number>>(
-    new Set(),
-  );
+
+  // Set of IDs of todos currently being deleted/updated for loader (TodoItem.tsx)
+  const [loadingTodoIds, setLoadingTodoIds] = useState<Set<number>>(new Set());
 
   // fetch todos from the server on component mount
   useEffect(() => {
@@ -45,6 +42,9 @@ export const App: React.FC = () => {
 
   // deletes a todo by id and updates the state
   const handleDeleteTodo = async (id: number) => {
+    // sets the loader (TodoItem.tsx) to the todo that is being deleted
+    setLoadingTodoIds(prevIds => new Set(prevIds).add(id));
+
     try {
       await deleteTodo(id);
       setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
@@ -56,6 +56,15 @@ export const App: React.FC = () => {
 
       // throws error to be caught in another component (TodoItem.tsx)
       throw error;
+    } finally {
+      // removed deleted todo id to stop the loader
+      setLoadingTodoIds(prevIds => {
+        const newIds = new Set(prevIds);
+
+        newIds.delete(id);
+
+        return newIds;
+      });
     }
   };
 
@@ -63,8 +72,8 @@ export const App: React.FC = () => {
   const handleDeleteCompleted = async () => {
     const completedTodos = todos.filter(todo => todo.completed);
 
-    //sets todos ids which being deleted (this enables the loader to be turned on in TodoItem.tsx)
-    setCompletedDeletingIds(new Set(completedTodos.map(todo => todo.id)));
+    // sets all completed todos ids which being deleted
+    setLoadingTodoIds(new Set(completedTodos.map(todo => todo.id)));
 
     const deletionPromises = completedTodos.map(todo =>
       handleDeleteTodo(todo.id),
@@ -72,7 +81,8 @@ export const App: React.FC = () => {
 
     await Promise.all(deletionPromises);
 
-    setCompletedDeletingIds(new Set());
+    // removed all completed todos ids to stop loader
+    setLoadingTodoIds(new Set());
 
     setTimeout(() => {
       setErrorMessage('');
@@ -81,6 +91,9 @@ export const App: React.FC = () => {
 
   // updates a todo and updates the state with the new todo
   const handleChangeTodo = async (updatedTodo: Todo) => {
+    // sets the loader to the todo that is being changed
+    setLoadingTodoIds(prevIds => new Set(prevIds).add(updatedTodo.id));
+
     try {
       const changedTodo = await changeTodo(updatedTodo);
 
@@ -97,6 +110,15 @@ export const App: React.FC = () => {
 
       // throws error to be caught in another component (TodoItem.tsx)
       throw error;
+    } finally {
+      // removed changed todo id to stop the loader
+      setLoadingTodoIds(prevIds => {
+        const newIds = new Set(prevIds);
+
+        newIds.delete(updatedTodo.id);
+
+        return newIds;
+      });
     }
   };
 
@@ -112,7 +134,7 @@ export const App: React.FC = () => {
         <Header
           todos={todos}
           setTodos={setTodos}
-          setUpdatingTodosIds={setUpdatingTodosIds}
+          setLoadingTodoIds={setLoadingTodoIds}
           setErrorMessage={setErrorMessage}
           setTempTodo={setTempTodo}
           changeTodoStatus={handleChangeTodo}
@@ -122,11 +144,11 @@ export const App: React.FC = () => {
           todos={filteredTodos}
           tempTodo={tempTodo}
           onDelete={handleDeleteTodo}
-          completedDeletingIds={completedDeletingIds}
-          updatingTodosIds={updatingTodosIds}
+          loadingTodoIds={loadingTodoIds}
           changeTodo={handleChangeTodo}
         />
 
+        {/* Only render Footer if there are todos */}
         {!!todos.length && (
           <Footer
             todos={todos}

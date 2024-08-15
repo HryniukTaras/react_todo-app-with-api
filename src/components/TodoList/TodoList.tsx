@@ -7,8 +7,7 @@ type Props = {
   todos: Todo[];
   tempTodo: Todo | null;
   onDelete: (id: number) => void;
-  completedDeletingIds: Set<number>;
-  updatingTodosIds: Set<number>;
+  loadingTodoIds: Set<number>;
   changeTodo: (todo: Todo) => void;
 };
 
@@ -16,8 +15,7 @@ export const TodoList: React.FC<Props> = ({
   todos,
   tempTodo,
   onDelete,
-  completedDeletingIds,
-  updatingTodosIds,
+  loadingTodoIds,
   changeTodo,
 }) => {
   return (
@@ -27,8 +25,7 @@ export const TodoList: React.FC<Props> = ({
           key={todo.id}
           todo={todo}
           onDelete={onDelete}
-          isCompletedDeleting={completedDeletingIds.has(todo.id)}
-          isUpdatingTodos={updatingTodosIds.has(todo.id)}
+          isLoadingTodos={loadingTodoIds.has(todo.id)}
           changeTodo={changeTodo}
         />
       ))}

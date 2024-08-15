@@ -9,43 +9,19 @@ import { TodoDeleteButton } from '../TodoDeleteButton';
 type Props = {
   todo: Todo;
   onDelete: (id: number) => void;
-  isCompletedDeleting: boolean;
-  isUpdatingTodos: boolean;
+  isLoadingTodos: boolean;
   changeTodo: (todo: Todo) => void;
 };
 
 export const TodoItem: React.FC<Props> = ({
   todo,
   onDelete,
-  isCompletedDeleting,
   changeTodo,
-  isUpdatingTodos,
+  isLoadingTodos,
 }) => {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [inputText, setInputText] = useState('');
   const [inputIsEditing, setInputIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // deleting todo
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await onDelete(todo.id);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  // updating todo
-  const handleUpdate = async () => {
-    setIsUpdating(true);
-    try {
-      await changeTodo({ ...todo, completed: !todo.completed });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
 
   // handles escape key to cancel editing
   const handleKeyUp = (event: React.KeyboardEvent) => {
@@ -61,20 +37,17 @@ export const TodoItem: React.FC<Props> = ({
 
     //updates todo if title changed
     if (inputText.trim() && inputText.trim() !== todo.title) {
-      setIsUpdating(true);
       try {
         await changeTodo({ ...todo, title: inputText.trim() });
       } catch {
         success = false;
-      } finally {
-        setIsUpdating(false);
       }
     }
 
     //deletes todo if title is empty
     if (!inputText.trim()) {
       try {
-        await handleDelete();
+        await onDelete(todo.id);
       } catch {
         success = false;
       }
@@ -99,8 +72,8 @@ export const TodoItem: React.FC<Props> = ({
           type="checkbox"
           className="todo__status"
           checked={todo.completed}
-          onChange={handleUpdate}
-          disabled={isUpdating || isCompletedDeleting}
+          onChange={() => changeTodo({ ...todo, completed: !todo.completed })}
+          disabled={isLoadingTodos}
         />
       </label>
 
@@ -108,7 +81,6 @@ export const TodoItem: React.FC<Props> = ({
         <form
           onSubmit={event => {
             event.preventDefault();
-
             handleSubmit();
           }}
         >
@@ -126,27 +98,29 @@ export const TodoItem: React.FC<Props> = ({
           />
         </form>
       ) : (
-        <span
-          data-cy="TodoTitle"
-          className="todo__title"
-          onDoubleClick={() => {
-            setInputIsEditing(true);
-            setInputText(todo.title);
-          }}
-        >
-          {todo.title}
-        </span>
-      )}
+        <>
+          <span
+            data-cy="TodoTitle"
+            className="todo__title"
+            onDoubleClick={() => {
+              setInputIsEditing(true);
+              setInputText(todo.title);
+            }}
+          >
+            {todo.title}
+          </span>
 
-      {!inputIsEditing && (
-        <TodoDeleteButton onDelete={handleDelete} todoId={todo.id} />
+          <TodoDeleteButton
+            onDelete={() => onDelete(todo.id)}
+            todoId={todo.id}
+          />
+        </>
       )}
 
       <div
         data-cy="TodoLoader"
         className={classNames('modal overlay', {
-          'is-active':
-            isCompletedDeleting || isDeleting || isUpdating || isUpdatingTodos,
+          'is-active': isLoadingTodos,
         })}
       >
         <div className="modal-background has-background-white-ter" />

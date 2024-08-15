@@ -1,10 +1,10 @@
 import classNames from 'classnames';
-import { Todo } from '../../types/todo';
+import { Todo, TodoStatus } from '../../types/todo';
 
 type Props = {
   todos: Todo[];
   handleDeleteCompleted: () => void;
-  status: 'all' | 'active' | 'completed';
+  status: TodoStatus;
   setStatus: (value: 'all' | 'active' | 'completed') => void;
 };
 
