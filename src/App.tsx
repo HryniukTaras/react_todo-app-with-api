@@ -10,7 +10,7 @@ import { Footer } from './components/Footer';
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
-  const [status, setStatus] = useState<TodoStatus>('all');
+  const [status, setStatus] = useState<TodoStatus>(TodoStatus.all);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
 
   // Set of IDs of todos currently being deleted/updated for loader (TodoItem.tsx)
@@ -31,9 +31,9 @@ export const App: React.FC = () => {
   // filter todos based on the current status (all, active, completed)
   const filteredTodos = useMemo(() => {
     switch (status) {
-      case 'active':
+      case TodoStatus.active:
         return todos.filter(todo => !todo.completed);
-      case 'completed':
+      case TodoStatus.completed:
         return todos.filter(todo => todo.completed);
       default:
         return todos;

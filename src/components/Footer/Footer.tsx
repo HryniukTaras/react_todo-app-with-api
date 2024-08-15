@@ -5,7 +5,7 @@ type Props = {
   todos: Todo[];
   handleDeleteCompleted: () => void;
   status: TodoStatus;
-  setStatus: (value: 'all' | 'active' | 'completed') => void;
+  setStatus: (value: TodoStatus) => void;
 };
 
 export const Footer: React.FC<Props> = ({
@@ -21,38 +21,19 @@ export const Footer: React.FC<Props> = ({
       </span>
 
       <nav className="filter" data-cy="Filter">
-        <a
-          href="#/"
-          className={classNames('filter__link', {
-            selected: status === 'all',
-          })}
-          data-cy="FilterLinkAll"
-          onClick={() => setStatus('all')}
-        >
-          All
-        </a>
-
-        <a
-          href="#/active"
-          className={classNames('filter__link', {
-            selected: status === 'active',
-          })}
-          data-cy="FilterLinkActive"
-          onClick={() => setStatus('active')}
-        >
-          Active
-        </a>
-
-        <a
-          href="#/completed"
-          className={classNames('filter__link', {
-            selected: status === 'completed',
-          })}
-          data-cy="FilterLinkCompleted"
-          onClick={() => setStatus('completed')}
-        >
-          Completed
-        </a>
+        {Object.values(TodoStatus).map(value => (
+          <a
+            key={value}
+            href="#/"
+            className={classNames('filter__link', {
+              selected: status === value,
+            })}
+            data-cy={`FilterLink${value}`}
+            onClick={() => setStatus(value)}
+          >
+            {value}
+          </a>
+        ))}
       </nav>
 
       <button

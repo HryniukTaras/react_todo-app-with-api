@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
 
-import React, { useRef, useState } from 'react';
+import React, { ChangeEvent, useRef, useState } from 'react';
 import classNames from 'classnames';
 import { Todo } from '../../types/todo';
 import { TodoDeleteButton } from '../TodoDeleteButton';
@@ -29,6 +29,16 @@ export const TodoItem: React.FC<Props> = ({
       setInputText('');
       setInputIsEditing(false);
     }
+  };
+
+  // handles double click on span
+  const handleDoubleClick = () => {
+    setInputIsEditing(true);
+    setInputText(todo.title);
+  };
+
+  const handleFormInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setInputText(event.target.value);
   };
 
   // handles form submission for updating or deleting todo
@@ -61,6 +71,12 @@ export const TodoItem: React.FC<Props> = ({
     }
   };
 
+  const handleFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+
+    handleSubmit();
+  };
+
   return (
     <div
       data-cy="Todo"
@@ -78,12 +94,7 @@ export const TodoItem: React.FC<Props> = ({
       </label>
 
       {inputIsEditing ? (
-        <form
-          onSubmit={event => {
-            event.preventDefault();
-            handleSubmit();
-          }}
-        >
+        <form onSubmit={handleFormSubmit}>
           <input
             data-cy="TodoTitleField"
             type="text"
@@ -94,7 +105,7 @@ export const TodoItem: React.FC<Props> = ({
             autoFocus
             onBlur={handleSubmit}
             onKeyUp={handleKeyUp}
-            onChange={event => setInputText(event.target.value)}
+            onChange={handleFormInputChange}
           />
         </form>
       ) : (
@@ -102,10 +113,7 @@ export const TodoItem: React.FC<Props> = ({
           <span
             data-cy="TodoTitle"
             className="todo__title"
-            onDoubleClick={() => {
-              setInputIsEditing(true);
-              setInputText(todo.title);
-            }}
+            onDoubleClick={handleDoubleClick}
           >
             {todo.title}
           </span>
